@@ -21,13 +21,23 @@ export const CloudConfig = ({ mode, onConfigured, onBack }: CloudConfigProps) =>
   const [secretKey, setSecretKey] = useState('');
   const [bucket, setBucket] = useState('');
   const [region, setRegion] = useState('us-east-1');
+  const [basePath, setBasePath] = useState('');
+  const [metaPath, setMetaPath] = useState('');
   const [configStatus, setConfigStatus] = useState<'none' | 'checking' | 'found' | 'not-found'>('none');
 
   const handleConfigure = () => {
+    // Auto-generate paths if not provided
+    const username = 'username'; // In real app, get from system
+    const timestamp = new Date().toISOString().split('T')[0];
+    const finalBasePath = basePath || `${bucket || 'backup'}/${username}/Migration/${timestamp}`;
+    const finalMetaPath = metaPath || `${bucket || 'backup'}/${username}/_migration_config`;
+    
     const config: RcloneConfig = {
       remoteName,
       storageType,
       configPath: './rclone.conf',
+      basePath: finalBasePath,
+      metaPath: finalMetaPath,
       endpoint: storageType === 's3-compatible' ? endpoint : undefined,
       accessKeyId: accessKey,
       secretAccessKey: secretKey,
@@ -152,6 +162,32 @@ export const CloudConfig = ({ mode, onConfigured, onBack }: CloudConfigProps) =>
                   placeholder="us-east-1"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="base-path">Base Path (optional)</Label>
+              <Input
+                id="base-path"
+                value={basePath}
+                onChange={(e) => setBasePath(e.target.value)}
+                placeholder="Auto-generated if empty"
+              />
+              <p className="text-xs text-muted-foreground">
+                Example: bucket-name/username/Migration/2025-11-28
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="meta-path">Config Path (optional)</Label>
+              <Input
+                id="meta-path"
+                value={metaPath}
+                onChange={(e) => setMetaPath(e.target.value)}
+                placeholder="Auto-generated if empty"
+              />
+              <p className="text-xs text-muted-foreground">
+                Example: bucket-name/username/_migration_config
+              </p>
             </div>
           </>
         )}
