@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
-import { Upload, Download, CheckCircle, AlertCircle, FileText } from "lucide-react";
-import { TransferProgress as TransferProgressType, TransferSummary } from "@/types/migration";
+import { Upload, Download, CheckCircle, AlertCircle, FileText, Terminal } from "lucide-react";
+import { TransferProgress as TransferProgressType, TransferSummary, MigrationConfig } from "@/types/migration";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { buildBackupCommand, buildRestoreCommand, updateConfigAfterTransfer, saveConfigLocally, uploadConfigToCloud } from "@/utils/migrationConfig";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface TransferProgressProps {
   mode: 'backup' | 'restore';
-  folderCount: number;
+  config: MigrationConfig;
   onComplete: (summary: TransferSummary) => void;
   onCancel: () => void;
 }
 
-export const TransferProgress = ({ mode, folderCount, onComplete, onCancel }: TransferProgressProps) => {
+export const TransferProgress = ({ mode, config, onComplete, onCancel }: TransferProgressProps) => {
   const [status, setStatus] = useState<'ready' | 'transferring' | 'complete'>('ready');
   const [progress, setProgress] = useState<TransferProgressType>({
     totalFiles: 0,
@@ -24,6 +26,10 @@ export const TransferProgress = ({ mode, folderCount, onComplete, onCancel }: Tr
     eta: 0,
     errors: [],
   });
+  const [showCommands, setShowCommands] = useState(false);
+
+  const selectedFolders = config.folders.filter(f => f.selected);
+  const folderCount = selectedFolders.length;
 
   // Simulate transfer progress (in real app, this would come from rclone)
   useEffect(() => {
@@ -34,7 +40,18 @@ export const TransferProgress = ({ mode, folderCount, onComplete, onCancel }: Tr
           const newBytes = Math.min(prev.transferredBytes + 5000000, 500000000);
           
           if (newTransferred >= 100) {
-            setTimeout(() => {
+            setTimeout(async () => {
+              // Update config with transfer timestamps
+              const updatedConfig = updateConfigAfterTransfer(config, mode);
+              
+              // Save config locally
+              await saveConfigLocally(updatedConfig);
+              
+              // Upload config to cloud in backup mode
+              if (mode === 'backup') {
+                await uploadConfigToCloud(updatedConfig);
+              }
+              
               setStatus('complete');
               onComplete({
                 success: true,
@@ -158,6 +175,36 @@ export const TransferProgress = ({ mode, folderCount, onComplete, onCancel }: Tr
       </div>
 
       <div className="bg-card rounded-xl p-8 shadow-md space-y-6">
+        {status === 'ready' && (
+          <Collapsible open={showCommands} onOpenChange={setShowCommands}>
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full mb-4">
+                <Terminal className="w-4 h-4 mr-2" />
+                {showCommands ? 'Hide' : 'Show'} Rclone Commands
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-3 mb-6">
+              <Alert>
+                <AlertDescription>
+                  <div className="text-xs font-mono space-y-3">
+                    {selectedFolders.map(folder => (
+                      <div key={folder.id} className="p-3 bg-muted rounded border">
+                        <div className="font-semibold mb-1 text-foreground">{folder.label}:</div>
+                        <div className="text-muted-foreground break-all">
+                          {mode === 'backup' 
+                            ? buildBackupCommand(config, folder)
+                            : buildRestoreCommand(config, folder)
+                          }
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </AlertDescription>
+              </Alert>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+
         {status === 'transferring' && (
           <>
             <div className="space-y-2">

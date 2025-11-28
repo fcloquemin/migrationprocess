@@ -1,26 +1,38 @@
-import { useState } from "react";
-import { Folder, Plus, X, CheckCircle } from "lucide-react";
-import { ProfileFolder, CustomFolder, FolderSelection as FolderSelectionType } from "@/types/migration";
+import { useState, useEffect } from "react";
+import { Folder, Plus, X, CheckCircle, Info } from "lucide-react";
+import { ProfileFolder, CustomFolder, FolderSelection as FolderSelectionType, MigrationConfig } from "@/types/migration";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { parseFolderSelection } from "@/utils/migrationConfig";
 
 interface FolderSelectionProps {
   mode: 'backup' | 'restore';
-  detectedFolders?: ProfileFolder[];
+  existingConfig?: MigrationConfig | null;
   onContinue: (selection: FolderSelectionType) => void;
   onBack: () => void;
 }
 
 const PROFILE_FOLDERS: ProfileFolder[] = ['Desktop', 'Documents', 'Downloads', 'Pictures', 'Videos'];
 
-export const FolderSelection = ({ mode, detectedFolders, onContinue, onBack }: FolderSelectionProps) => {
-  const [selectedFolders, setSelectedFolders] = useState<ProfileFolder[]>(detectedFolders || []);
+export const FolderSelection = ({ mode, existingConfig, onContinue, onBack }: FolderSelectionProps) => {
+  const [selectedFolders, setSelectedFolders] = useState<ProfileFolder[]>([]);
   const [customFolders, setCustomFolders] = useState<CustomFolder[]>([]);
   const [showAddCustom, setShowAddCustom] = useState(false);
   const [customFolderName, setCustomFolderName] = useState('');
   const [customFolderPath, setCustomFolderPath] = useState('');
+  const [configLoaded, setConfigLoaded] = useState(false);
+
+  // Load existing config if in restore mode
+  useEffect(() => {
+    if (mode === 'restore' && existingConfig && !configLoaded) {
+      const { profileFolders, customFolders: customFoldersFromConfig } = parseFolderSelection(existingConfig);
+      setSelectedFolders(profileFolders);
+      setCustomFolders(customFoldersFromConfig);
+      setConfigLoaded(true);
+    }
+  }, [mode, existingConfig, configLoaded]);
 
   const toggleFolder = (folder: ProfileFolder) => {
     setSelectedFolders(prev =>
@@ -73,11 +85,25 @@ export const FolderSelection = ({ mode, detectedFolders, onContinue, onBack }: F
         </p>
       </div>
 
-      {mode === 'restore' && detectedFolders && detectedFolders.length > 0 && (
+      {mode === 'restore' && existingConfig && (
         <Alert className="mb-6 border-primary bg-primary/5">
           <CheckCircle className="h-4 w-4 text-primary" />
           <AlertDescription className="text-primary">
-            Found a previous backup with {detectedFolders.length} folders. Review and adjust your selection below.
+            Found a previous backup from {new Date(existingConfig.created_at).toLocaleDateString()} with {existingConfig.folders.filter(f => f.selected).length} folders.
+            {existingConfig.last_run_at && (
+              <span className="block mt-1">
+                Last backup: {new Date(existingConfig.last_run_at).toLocaleString()}
+              </span>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {mode === 'backup' && (
+        <Alert className="mb-6 border-border bg-muted/50">
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            Selected folders will be backed up to the cloud. A configuration file will be saved to help restore your data later.
           </AlertDescription>
         </Alert>
       )}
