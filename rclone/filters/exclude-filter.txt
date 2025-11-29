@@ -1,0 +1,20 @@
+# Fichiers À EXCLURE de la migration
+# Format: glob patterns
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.cache
+.DS_Store
+Thumbs.db
+
+# Fichiers system
+.git*
+.svn
+.hg
+CVS
+.lock
+
+# Logs
+*.log
+logs/

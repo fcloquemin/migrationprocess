@@ -1,0 +1,34 @@
+# TEMPLATE AVANCÉ MULTI-SOURCES
+# Utilisez ce fichier pour configurations complexes
+
+[source-aws-s3]
+type = s3
+provider = AWS
+region = eu-west-1
+bucket_acl = private
+
+[source-azure]
+type = azureblob
+access_tier = Hot
+
+[source-gcs]
+type = google cloud storage
+project_number = 
+
+[dest-azure]
+type = azureblob
+access_tier = Cool
+
+[dest-s3]
+type = s3
+provider = AWS
+region = eu-central-1
+storage_class = GLACIER
+
+[local-staging]
+type = local
+path = /data/staging
+
+[local-archive]
+type = local
+path = /data/archive

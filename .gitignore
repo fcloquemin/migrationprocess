@@ -22,3 +22,18 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Configuration réelle avec secrets
+rclone.conf
+.env
+!rclone.conf.example
+!rclone.conf.template
+
+# Fichiers temporaires
+*.tmp
+*~
+.DS_Store
+__pycache__/
+*.pyc
+.pytest_cache/
+

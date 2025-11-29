@@ -1,0 +1,8 @@
+# Fichiers À INCLURE explicitement
+# (si vide, tous les fichiers sont inclus sauf ceux en exclude)
+
+# Si vous voulez SEULEMENT certains types:
+# *.pdf
+# *.xlsx
+# *.docx
+# *.jpg

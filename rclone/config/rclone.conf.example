@@ -1,0 +1,61 @@
+# RCLONE CONFIGURATION TEMPLATE
+# À dupliquer en rclone.conf et remplir avec vos données
+# IMPORTANT: Ne commiter JAMAIS rclone.conf - ajouter au .gitignore
+
+# ============================================================
+# SOURCE - Cloud provider d'ORIGINE (ex: AWS S3, Azure, etc)
+# ============================================================
+[source]
+type = s3
+provider = AWS
+# access_key_id = YOUR_AWS_ACCESS_KEY_ID
+# secret_access_key = YOUR_AWS_SECRET_ACCESS_KEY
+region = eu-west-1
+endpoint = 
+acl = private
+bucket_acl = private
+storage_class = STANDARD
+
+# ============================================================
+# DESTINATION - Cloud provider CIBLE (ex: Azure Blob, etc)
+# ============================================================
+[destination]
+type = azureblob
+# account = YOUR_AZURE_ACCOUNT_NAME
+# account_key = YOUR_AZURE_ACCOUNT_KEY
+endpoint = 
+access_tier = Hot
+
+# ============================================================
+# NAS LOCAL - Stockage local (optionnel)
+# ============================================================
+[local]
+type = local
+path = /mnt/migration-data
+
+# ============================================================
+# SFTP - Pour migrations par SFTP
+# ============================================================
+[sftp-source]
+type = sftp
+host = sftp.example.com
+user = username
+# pass = password (à remplir via variable env)
+port = 22
+path = /home/username/data
+
+# ============================================================
+# Dropbox (optionnel)
+# ============================================================
+[dropbox]
+type = dropbox
+# token = YOUR_DROPBOX_TOKEN
+
+# ============================================================
+# Google Drive (optionnel)
+# ============================================================
+[gdrive]
+type = drive
+# client_id = YOUR_CLIENT_ID
+# client_secret = YOUR_CLIENT_SECRET
+# token = 
