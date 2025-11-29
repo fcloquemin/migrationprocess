@@ -109,3 +109,41 @@ ipcMain.handle('start-restore', async (event, migrationConfig) => {
   // TODO : implémenter la boucle de restore
   return { success: true, message: 'Restore démarré (stub)' };
 });
+
+// en haut du fichier main (ex: electron/main.js ou main.cjs)
+const { ipcMain } = require('electron');
+const { spawn } = require('child_process');
+const path = require('path');
+ipcMain.handle('rclone:create-onedrive', async (_event, remoteName) => {
+  return new Promise((resolve, reject) => {
+    const scriptPath = path.join(process.cwd(), 'scripts', 'create_onedrive_remote.ps1');
+
+    const child = spawn('powershell.exe', [
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      scriptPath,
+      '-RemoteName',
+      remoteName,
+    ]);
+
+    let output = '';
+    let error = '';
+
+    child.stdout.on('data', (data) => {
+      output += data.toString();
+    });
+
+    child.stderr.on('data', (data) => {
+      error += data.toString();
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve({ success: true, output });
+      } else {
+        reject({ success: false, code, error, output });
+      }
+    });
+  });
+});
