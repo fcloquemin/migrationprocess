@@ -5,25 +5,23 @@ param(
 
 Write-Host "=== Création remote OneDrive: $RemoteName ==="
 
-# Vérifier rclone
 $rclone = Get-Command rclone -ErrorAction SilentlyContinue
 if (-not $rclone) {
     Write-Error "rclone n'est pas installé ou pas dans le PATH."
     exit 1
 }
 
-# Fichier de config (standard Windows)
 $configPath = "$env:USERPROFILE\.config\rclone\rclone.conf"
 $env:RCLONE_CONFIG = $configPath
 
-Write-Host "Config utilisée: $configPath"
+Write-Host "Fichier de config utilisé: $configPath"
 
-# Lancement de la config interactive OneDrive (ouvre le navigateur)
-# On laisse rclone poser les questions dans la console
+# Lancement interactif avec ouverture du navigateur
 rclone config create $RemoteName onedrive
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "✅ Remote OneDrive '$RemoteName' créé avec succès."
+    Write-Host "Remotes disponibles :"
     rclone listremotes
     exit 0
 } else {
